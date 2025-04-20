@@ -931,6 +931,17 @@ class TokopediaScrapper:
                 ])
         print(f"Saved to {filename}")
 
+    def get_product_detail(self,url):
+        productPage = self.get_product_page(url)
+
+        components = productPage['data']['pdpGetLayout']['components']
+
+        for i in range(len(components)):
+            if components[i]['name'] == 'product_detail':
+                return components[i]
+            
+        return None
+
     def append_to_csv(self,all_products, filename="tokopedia_products.csv"):
         with open(filename, mode="a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file,quoting=csv.QUOTE_ALL)
@@ -1008,9 +1019,12 @@ class TokopediaScrapper:
 
                     for i in range(len(products)):
                         try:
-                            product_page = self.get_product_page(products[i]['url'])
+                            product_page = self.get_product_detail(products[i]['url'])
                             if product_page != None:
-                                products[i]['product_detail'] = product_page['data']['pdpGetLayout']['components'][21]['data'][0]['content'][-1]['subtitle'] if product_page['data']['pdpGetLayout']['components'][21]['data'][0]['content'][-1]['subtitle'] else ""
+                                content = product_page['data'][0]['content']
+                                products[i]['product_detail'] = ""
+                                for j in range(0,len(content)):
+                                    products[i]['product_detail'] += f"{content[j]['title'] if content[j]['title'] else ''} : { content[j]['subtitle'] if content[j]['subtitle'] else ''}\n"
                             else :
                                 products[i]['product_detail'] = ""
                         except Exception as e:
